@@ -1,0 +1,158 @@
+// Câu 1a
+#include <avr/io.h>
+#define F_CPU 1000000UL
+#include <avr/interrupt.h>
+#define DATA PF0
+#define Clock PF1
+#define Chot PF2
+// LED 7 đọan Common Anode – segment sáng khi bit = 0
+unsigned char code[] = {
+	0b11000000, // 0
+	0b11111001, // 1
+	0b10100100, // 2
+	0b10110000, // 3
+	0b10011001, // 4
+	0b10010010, // 5
+	0b10000010, // 6
+	0b11111000, // 7
+	0b10000000, // 8
+	0b10010000  // 9
+};
+int count = 0;
+int num = 0;
+int main(void)
+{
+	DDRA |= (1<<PA0);
+	DDRF |= (1<<PF0)|(1<<PF1)|(1<<PF2);
+	TCCR0 |= (1<<CS02); //Frescaler 64: CS02 = 1, CS01 = 0; CS00 = 0
+	TCNT0 = 0xE0;
+	TIMSK |= (1<<TOIE0);
+	sei();
+	while (1)
+	{
+	};
+}
+void HienThi(unsigned int n){
+	int j;
+	unsigned char hangchuc, hangdonvi;
+	hangchuc = code[n / 10];
+	hangdonvi = code[n % 10];
+
+	// Truyền dữ liệu cho LED ??n v? tr??c (hiển thị bên phải)
+	for (j = 7; j >= 0; j--) {
+		if (hangdonvi & (1 << j)) {
+			PORTF |= (1 << DATA);
+			} else {
+			PORTF &= ~(1 << DATA);
+		}
+		PORTF |= (1 << Clock);
+		PORTF &= ~(1 << Clock);
+	}
+
+	// Truyền dữ liệu cho LED hàng chục (hiển thị bên trái)
+	for (j = 7; j >= 0; j--) {
+		if (hangchuc & (1 << j)) {
+			PORTF |= (1 << DATA);
+			} else {
+			PORTF &= ~(1 << DATA);
+		}
+		PORTF |= (1 << Clock);
+		PORTF &= ~(1 << Clock);
+	}
+
+	// T?o xung ch?t (latch)
+	PORTF |= (1 << Chot);
+	PORTF &= ~(1 << Chot);
+}
+
+ISR (TIMER0_OVF_vect){
+	TCNT0 = 0xE0;
+	count++;
+	if(count==2000){ 
+		count = 0;
+		PORTA ^= 1;
+		num++;
+		if(num>99){
+			num = 0;
+		}
+		HienThi(num);
+	}
+}
+
+Câu 1B
+#include <avr/io.h>
+#define F_CPU 1000000UL
+#include <avr/interrupt.h>
+#define DATA PF0
+#define Clock PF1
+#define Chot PF2
+// LED 7 đọan Common Anode – segment sáng khi bit = 0
+unsigned char code[] = {
+	0b11000000, // 0
+	0b11111001, // 1
+	0b10100100, // 2
+	0b10110000, // 3
+	0b10011001, // 4
+	0b10010010, // 5
+	0b10000010, // 6
+	0b11111000, // 7
+	0b10000000, // 8
+	0b10010000  // 9
+};
+int count = 0;
+int num = 0;
+int main(void)
+{
+	DDRA |= (1<<PA0);
+	DDRF |= (1<<PF0)|(1<<PF1)|(1<<PF2);
+	TCCR1B |= (1<<CS11)|(1<<CS10); //Frescaler 64: CS12 = 0, CS11 = 1; CS10 = 1
+	TCNT1 = 0x85EE;
+	TIMSK |= (1<<TOIE1);
+	sei();
+	while (1)
+	{
+	};
+}
+void HienThi(unsigned int n){
+	int j;
+	unsigned char hangchuc, hangdonvi;
+	hangchuc = code[n / 10];
+	hangdonvi = code[n % 10];
+
+	// Truyền dữ liệu cho LED ??n v? tr??c (hiển thị bên phải)
+	for (j = 7; j >= 0; j--) {
+		if (hangdonvi & (1 << j)) {
+			PORTF |= (1 << DATA);
+			} else {
+			PORTF &= ~(1 << DATA);
+		}
+		PORTF |= (1 << Clock);
+		PORTF &= ~(1 << Clock);
+	}
+
+	// Truyền dữ liệu cho LED hàng chục (hiển thị bên trái)
+	for (j = 7; j >= 0; j--) {
+		if (hangchuc & (1 << j)) {
+			PORTF |= (1 << DATA);
+			} else {
+			PORTF &= ~(1 << DATA);
+		}
+		PORTF |= (1 << Clock);
+		PORTF &= ~(1 << Clock);
+	}
+
+	// T?o xung ch?t (latch)
+	PORTF |= (1 << Chot);
+	PORTF &= ~(1 << Chot);
+}
+
+ISR (TIMER1_OVF_vect){
+	TCNT1 = 0x85EE;
+	count++;
+	PORTA ^=1;
+	num++;
+	if(num>99){
+		num = 0;
+	}
+	HienThi(num);
+}
